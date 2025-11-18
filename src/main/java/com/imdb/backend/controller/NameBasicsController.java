@@ -1,4 +1,3 @@
-// filepath: d:\Work\SpringBoot\backend\src\main\java\com\imdb\backend\controller\NameBasicsController.java
 package com.imdb.backend.controller;
 
 import com.imdb.backend.entity.NameBasics;

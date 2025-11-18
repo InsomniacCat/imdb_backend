@@ -16,10 +16,10 @@ public class NameBasics implements Serializable {
     private String primaryName;
 
     @Column(name = "birthYear")
-    private Short birthYear;
+    private Integer birthYear;
 
     @Column(name = "deathYear")
-    private Short deathYear;
+    private Integer deathYear;
 
     @Convert(converter = StringListConverter.class)
     @Column(name = "primaryProfession", columnDefinition = "TEXT")
@@ -28,6 +28,35 @@ public class NameBasics implements Serializable {
     @Convert(converter = StringListConverter.class)
     @Column(name = "knownForTitles", columnDefinition = "TEXT")
     private List<String> knownForTitles;
+    
+    /**
+     * 无参构造函数
+     * 必须提供以满足JPA框架的要求
+     * JPA在从数据库加载数据时会使用此构造函数创建对象实例
+     */
+    public NameBasics() {}
+    
+    /**
+     * 全参构造函数
+     * 提供便捷的方式来创建并初始化所有属性的对象
+     * 
+     * @param nconst 人员的唯一标识符
+     * @param primaryName 人员的主要姓名
+     * @param birthYear 出生年份
+     * @param deathYear 死亡年份
+     * @param primaryProfession 主要职业列表
+     * @param knownForTitles 知名作品列表
+     */
+    public NameBasics(String nconst, String primaryName, Integer birthYear, Integer deathYear, 
+                      List<String> primaryProfession, List<String> knownForTitles) {
+        this.nconst = nconst;
+        this.primaryName = primaryName;
+        this.birthYear = birthYear;
+        this.deathYear = deathYear;
+        this.primaryProfession = primaryProfession;
+        this.knownForTitles = knownForTitles;
+    }
+    
     public String getNconst() {
         return nconst;
     }
@@ -42,17 +71,17 @@ public class NameBasics implements Serializable {
         this.primaryName = primaryName;
     }
 
-    public Short getBirthYear() {
+    public Integer getBirthYear() {
         return birthYear;
     }
-    public void setBirthYear(Short birthYear) {
+    public void setBirthYear(Integer birthYear) {
         this.birthYear = birthYear;
     }
 
-    public Short getDeathYear() {
+    public Integer getDeathYear() {
         return deathYear;
     }
-    public void setDeathYear(Short deathYear) {
+    public void setDeathYear(Integer deathYear) {
         this.deathYear = deathYear;
     }
 
