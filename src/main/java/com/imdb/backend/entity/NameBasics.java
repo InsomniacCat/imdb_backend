@@ -1,54 +1,52 @@
-package com.imdb.backend.entity;
+package com.imdb.backend.entity; // 定义包路径，表示该类位于com.imdb.backend.entity包中
 
-import jakarta.persistence.*;
-import java.io.Serializable;
-import java.util.List;
+import jakarta.persistence.*; // 导入JPA相关注解
+import java.io.Serializable; // 导入Serializable接口
+import java.util.List; // 导入List集合接口
 
-@Entity
-@Table(name = "name_basics")
-public class NameBasics implements Serializable {
+/**
+ * 人员基本信息实体类
+ * 用于映射数据库中的name_basics表
+ * 实现了Serializable接口以支持对象序列化
+ */
+@Entity // 标识此类为JPA实体类，对应数据库中的表
+@Table(name = "name_basics") // 指定实体类映射的表名
+public class NameBasics implements Serializable { // 实现Serializable接口，支持序列化
 
-    @Id
-    @Column(name = "nconst", length = 255, nullable = false)
-    private String nconst;
+    @Id // 标识主键字段
+    @Column(name = "nconst", length = 255, nullable = false) // 指定映射到表中的列名、长度和非空约束
+    private String nconst; // 人员的唯一标识符
 
-    @Column(name = "primaryName", columnDefinition = "TEXT", nullable = false)
-    private String primaryName;
+    @Column(name = "primaryName", columnDefinition = "TEXT", nullable = false) // 指定列定义为TEXT类型且非空
+    private String primaryName; // 人员的姓名
 
-    @Column(name = "birthYear")
-    private Integer birthYear;
+    @Column(name = "birthYear") // 映射到birthYear列
+    private Integer birthYear; // 出生年份，null表示未知
 
-    @Column(name = "deathYear")
-    private Integer deathYear;
+    @Column(name = "deathYear") // 映射到deathYear列
+    private Integer deathYear; // 死亡年份，null表示在世
 
-    @Convert(converter = StringListConverter.class)
-    @Column(name = "primaryProfession", columnDefinition = "TEXT")
-    private List<String> primaryProfession;
+    @Convert(converter = StringListConverter.class) // 使用自定义转换器将List<String>转换为数据库可存储格式
+    @Column(name = "primaryProfession", columnDefinition = "TEXT") // 定义为TEXT类型存储多个职业
+    private List<String> primaryProfession; // 主要职业列表，如["actor", "director"]
 
-    @Convert(converter = StringListConverter.class)
-    @Column(name = "knownForTitles", columnDefinition = "TEXT")
-    private List<String> knownForTitles;
-    
+    @Convert(converter = StringListConverter.class) // 使用自定义转换器处理
+    @Column(name = "knownForTitles", columnDefinition = "TEXT") // 定义为TEXT类型存储多个作品ID
+    private List<String> knownForTitles; // 知名作品ID列表
+
     /**
      * 无参构造函数
-     * 必须提供以满足JPA框架的要求
-     * JPA在从数据库加载数据时会使用此构造函数创建对象实例
+     * JPA在从数据库加载数据时使用此构造函数创建对象实例
      */
-    public NameBasics() {}
-    
+    public NameBasics() {
+    }
+
     /**
      * 全参构造函数
      * 提供便捷的方式来创建并初始化所有属性的对象
-     * 
-     * @param nconst 人员的唯一标识符
-     * @param primaryName 人员的主要姓名
-     * @param birthYear 出生年份
-     * @param deathYear 死亡年份
-     * @param primaryProfession 主要职业列表
-     * @param knownForTitles 知名作品列表
      */
-    public NameBasics(String nconst, String primaryName, Integer birthYear, Integer deathYear, 
-                      List<String> primaryProfession, List<String> knownForTitles) {
+    public NameBasics(String nconst, String primaryName, Integer birthYear, Integer deathYear,
+            List<String> primaryProfession, List<String> knownForTitles) {
         this.nconst = nconst;
         this.primaryName = primaryName;
         this.birthYear = birthYear;
@@ -56,45 +54,87 @@ public class NameBasics implements Serializable {
         this.primaryProfession = primaryProfession;
         this.knownForTitles = knownForTitles;
     }
-    
+
+    /**
+     * 获取人员唯一标识符
+     */
     public String getNconst() {
         return nconst;
     }
+
+    /**
+     * 设置人员唯一标识符
+     */
     public void setNconst(String nconst) {
         this.nconst = nconst;
     }
 
+    /**
+     * 获取人员主要姓名
+     */
     public String getPrimaryName() {
         return primaryName;
     }
+
+    /**
+     * 设置人员主要姓名
+     */
     public void setPrimaryName(String primaryName) {
         this.primaryName = primaryName;
     }
 
+    /**
+     * 获取出生年份
+     */
     public Integer getBirthYear() {
         return birthYear;
     }
+
+    /**
+     * 设置出生年份
+     */
     public void setBirthYear(Integer birthYear) {
         this.birthYear = birthYear;
     }
 
+    /**
+     * 获取死亡年份
+     */
     public Integer getDeathYear() {
         return deathYear;
     }
+
+    /**
+     * 设置死亡年份
+     */
     public void setDeathYear(Integer deathYear) {
         this.deathYear = deathYear;
     }
 
+    /**
+     * 获取主要职业列表
+     */
     public List<String> getPrimaryProfession() {
         return primaryProfession;
     }
+
+    /**
+     * 设置主要职业列表
+     */
     public void setPrimaryProfession(List<String> primaryProfession) {
         this.primaryProfession = primaryProfession;
     }
 
+    /**
+     * 获取知名作品ID列表
+     */
     public List<String> getKnownForTitles() {
         return knownForTitles;
     }
+
+    /**
+     * 设置知名作品ID列表
+     */
     public void setKnownForTitles(List<String> knownForTitles) {
         this.knownForTitles = knownForTitles;
     }
