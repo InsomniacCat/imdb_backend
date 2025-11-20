@@ -7,11 +7,11 @@ import java.util.List; // List集合接口
 /**
  * 人员基本信息实体类
  * 用于映射数据库中的name_basics表
- * 实现了Serializable接口以支持对象序列化
  */
 @Entity // 标识此类为JPA实体类，对应数据库中的表
 @Table(name = "name_basics") // 指定实体类映射的表名
-public class NameBasics implements Serializable { // 实现Serializable接口，支持序列化
+public class NameBasics implements Serializable { // 标注Serializable接口，支持序列化
+    //序列化是将对象转换为字节流的过程，对象需要被序列化为JSON格式
 
     @Id // 主键字段
     @Column(name = "nconst", length = 255, nullable = false) // 指定映射到表中的列名、长度和非空约束
@@ -21,14 +21,14 @@ public class NameBasics implements Serializable { // 实现Serializable接口，
     private String primaryName; // 人员的姓名
 
     @Column(name = "birthYear") // 映射到birthYear列
-    private Integer birthYear; // 出生年份，null表示未知
+    private Integer birthYear; // 出生年份
 
     @Column(name = "deathYear") // 映射到deathYear列
-    private Integer deathYear; // 死亡年份，null表示在世
+    private Integer deathYear; // 死亡年份
 
     @Convert(converter = StringListConverter.class) // 使用自定义转换器将List<String>转换为数据库可存储格式
     @Column(name = "primaryProfession", columnDefinition = "TEXT") // 定义为TEXT类型存储多个职业
-    private List<String> primaryProfession; // 主要职业列表，如["actor", "director"]
+    private List<String> primaryProfession; // 主要职业列表
 
     @Convert(converter = StringListConverter.class) // 使用自定义转换器处理
     @Column(name = "knownForTitles", columnDefinition = "TEXT") // 定义为TEXT类型存储多个作品ID
@@ -36,7 +36,7 @@ public class NameBasics implements Serializable { // 实现Serializable接口，
 
     /**
      * 无参构造函数
-     * JPA在从数据库加载数据时使用此构造函数创建对象实例
+     * JPA框架通过Java反射机制创建对象时，默认需要一个无参构造函数
      */
     public NameBasics() {
     }

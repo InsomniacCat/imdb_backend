@@ -23,22 +23,22 @@ public class StringListConverter implements AttributeConverter<List<String>, Str
     private static final String NULL_REPRESENTATION = "\\N";
 
     /**
-     * 将Java中的List<String>转换为数据库列值（逗号分隔的字符串）
+     * 将Java中的List<String>转换为数据库列值中逗号分隔的字符串
      */
-    @Override
+    @Override//重写了父类或接口中的方法
     public String convertToDatabaseColumn(List<String> attribute) {
         // 如果传入的列表为null或空，直接返回null，不在数据库中存储空字符串
         if (attribute == null || attribute.isEmpty()) return null;
         
         // 将列表中的每个元素去除首尾空格后，用逗号连接成一个字符串
-        return attribute.stream()
+        return attribute.stream() // 转化为stream流
                 .map(String::trim)  // 去除每个元素的首尾空格
-                .map(s -> s.equals("\\N") ? "" : s)  // 处理特殊NULL值
+                .map(s -> s.equals("\\N") ? "" : s)  // 将特殊值 "\N" 替换为空字符串
                 .collect(Collectors.joining(SEP));  // 使用逗号连接所有元素
     }
 
     /**
-     * 将数据库列值（逗号分隔的字符串）转换为Java中的List<String>
+     * 将数据库中逗号分隔的字符串转换为Java中的List<String>
      */
     @Override
     public List<String> convertToEntityAttribute(String dbData) {
@@ -49,6 +49,6 @@ public class StringListConverter implements AttributeConverter<List<String>, Str
         return Arrays.stream(dbData.split(SEP))  // 按逗号分割字符串
                 .map(String::trim)  // 去除每个元素的首尾空格
                 .filter(s -> !s.isEmpty() && !s.equals(NULL_REPRESENTATION))  // 过滤掉空字符串和NULL表示
-                .collect(Collectors.toList());  // 收集为List<String>
+                .collect(Collectors.toList());  // 连接为List<String>
     }
 }

@@ -24,6 +24,7 @@ public class NameBasicsController {
     }
 
     // 根据ID获取单个人员数据
+    // var类似c++中的auto，自动推断类型
     @GetMapping("/{id}") // 处理GET请求，路径为/api/names/{id}
     public ResponseEntity<NameBasics> get(@PathVariable String id) { // 从URL中提取id参数
         var nb = service.findById(id); // 调用服务层根据ID查找
