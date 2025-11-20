@@ -7,25 +7,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//@Converter该类为JPA属性转换器，告诉JPA框架在持久化和检索过程中使用该转换器。
+//attribute.stream()是Stream API的一部分，作用是将Java中的List<String>集合转换为一个流(Stream)，以便进行一系列的函数式操作。
+
 /**
  * JPA属性转换器，用于在Java的List<String>和数据库的逗号分隔字符串之间进行转换
- * 
- * 该转换器允许我们在实体类中使用List<String>类型，而在数据库中以逗号分隔的字符串形式存储
  */
 @Converter
 public class StringListConverter implements AttributeConverter<List<String>, String> {
 
     // 定义分隔符，用于在数据库中分隔列表元素
     private static final String SEP = ",";
-    
+
     // IMDB数据中表示NULL的特殊值
     private static final String NULL_REPRESENTATION = "\\N";
 
     /**
      * 将Java中的List<String>转换为数据库列值（逗号分隔的字符串）
-     * 
-     * @param attribute Java实体中的List<String>属性值
-     * @return 数据库中存储的逗号分隔字符串，如果列表为空或null则返回null
      */
     @Override
     public String convertToDatabaseColumn(List<String> attribute) {
@@ -41,9 +39,6 @@ public class StringListConverter implements AttributeConverter<List<String>, Str
 
     /**
      * 将数据库列值（逗号分隔的字符串）转换为Java中的List<String>
-     * 
-     * @param dbData 数据库中存储的逗号分隔字符串
-     * @return 转换后的List<String>，如果输入为null或空白字符串则返回空列表
      */
     @Override
     public List<String> convertToEntityAttribute(String dbData) {

@@ -1,8 +1,8 @@
-package com.imdb.backend.entity; // 定义包路径，表示该类位于com.imdb.backend.entity包中
+package com.imdb.backend.entity; 
 
-import jakarta.persistence.*; // 导入JPA相关注解
-import java.io.Serializable; // 导入Serializable接口
-import java.util.List; // 导入List集合接口
+import jakarta.persistence.*; // JPA相关注解
+import java.io.Serializable; // Serializable接口
+import java.util.List; // List集合接口
 
 /**
  * 人员基本信息实体类
@@ -13,7 +13,7 @@ import java.util.List; // 导入List集合接口
 @Table(name = "name_basics") // 指定实体类映射的表名
 public class NameBasics implements Serializable { // 实现Serializable接口，支持序列化
 
-    @Id // 标识主键字段
+    @Id // 主键字段
     @Column(name = "nconst", length = 255, nullable = false) // 指定映射到表中的列名、长度和非空约束
     private String nconst; // 人员的唯一标识符
 

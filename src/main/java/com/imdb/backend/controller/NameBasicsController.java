@@ -1,13 +1,13 @@
 package com.imdb.backend.controller; // 控制器所在的包路径
 
-// 导入必要的类
-import com.imdb.backend.entity.NameBasics; // 导入实体类
-import com.imdb.backend.service.NameBasicsService; // 导入服务层接口
-import org.springframework.http.ResponseEntity; // 用于构建HTTP响应
-import org.springframework.web.bind.annotation.*; // 导入REST控制器相关注解
-import java.util.List; // 导入List集合
+import com.imdb.backend.entity.NameBasics; // 实体类
+import com.imdb.backend.service.NameBasicsService; // 服务层接口
+import org.springframework.http.ResponseEntity; // 构建HTTP响应
+import org.springframework.web.bind.annotation.*; // REST控制器相关注解
+import java.util.List; // List集合
 
-@RestController // 标识该类为REST控制器，自动将返回值转换为JSON
+// @Mapping表示该方法处理HTTP请求
+@RestController // 该类为REST控制器，自动将返回值转换为JSON
 @RequestMapping("/api/names") // 设置基础URL路径
 public class NameBasicsController {
     private final NameBasicsService service; // 服务层接口注入
