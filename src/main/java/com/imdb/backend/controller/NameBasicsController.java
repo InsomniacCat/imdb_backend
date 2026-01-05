@@ -34,7 +34,7 @@ public class NameBasicsController {
 
     // 根据名称搜索人员
     @GetMapping("/search") // 处理GET请求，路径为/api/names/search
-    public List<NameBasics> search(@RequestParam("q") String q) { // 从查询参数中获取q参数
+    public List<NameBasics> search(@RequestParam("q") String q) { // 从查询参数中获取参数
         return service.searchByName(q); // 调用服务层搜索功能
     }
 
