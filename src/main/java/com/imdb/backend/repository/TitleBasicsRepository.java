@@ -17,46 +17,64 @@ import java.util.List;
 @Repository
 public interface TitleBasicsRepository extends JpaRepository<TitleBasics, String> {
 
-    List<TitleBasics> findByPrimaryTitleContainingIgnoreCase(String title);
+        // 旧方法（不推荐，无分页限制）
+        List<TitleBasics> findByPrimaryTitleContainingIgnoreCase(String title);
 
-    /**
-     * 复合查询：根据标题、类型、年份范围、运行时长等条件
-     * 返回 Page 对象以支持服务端分页
-     */
-    @Query("SELECT t FROM TitleBasics t WHERE " +
-            "(:title IS NULL OR LOWER(t.primaryTitle) LIKE LOWER(CONCAT('%', :title, '%'))) AND " +
-            "(:titleType IS NULL OR t.titleType = :titleType) AND " +
-            "(:isAdult IS NULL OR t.isAdult = :isAdult) AND " +
-            "(:startYear IS NULL OR t.startYear >= :startYear) AND " +
-            "(:endYear IS NULL OR t.startYear <= :endYear) AND " +
-            "(:minRuntime IS NULL OR t.runtimeMinutes >= :minRuntime) AND " +
-            "(:maxRuntime IS NULL OR t.runtimeMinutes <= :maxRuntime)")
-    Page<TitleBasics> searchByMultipleCriteria(
-            @Param("title") String title,
-            @Param("titleType") String titleType,
-            @Param("isAdult") Boolean isAdult,
-            @Param("startYear") Integer startYear,
-            @Param("endYear") Integer endYear,
-            @Param("minRuntime") Integer minRuntime,
-            @Param("maxRuntime") Integer maxRuntime,
-            Pageable pageable);
+        // 新增：带分页限制的搜索方法
+        List<TitleBasics> findByPrimaryTitleContainingIgnoreCase(String title, Pageable pageable);
 
-    /**
-     * 统计类型数量
-     */
-    @Query("SELECT t.titleType, COUNT(t) FROM TitleBasics t GROUP BY t.titleType")
-    List<Object[]> countByTitleType();
+        /**
+         * 复合查询：根据标题、类型、年份范围、运行时长等条件
+         * 返回 Page 对象以支持服务端分页
+         */
+        @Query("SELECT t FROM TitleBasics t WHERE " +
+                        "(:title IS NULL OR LOWER(t.primaryTitle) LIKE LOWER(CONCAT('%', :title, '%'))) AND " +
+                        "(:titleType IS NULL OR t.titleType = :titleType) AND " +
+                        "(:isAdult IS NULL OR t.isAdult = :isAdult) AND " +
+                        "(:startYear IS NULL OR t.startYear >= :startYear) AND " +
+                        "(:endYear IS NULL OR t.startYear <= :endYear) AND " +
+                        "(:minRuntime IS NULL OR t.runtimeMinutes >= :minRuntime) AND " +
+                        "(:maxRuntime IS NULL OR t.runtimeMinutes <= :maxRuntime)")
+        Page<TitleBasics> searchByMultipleCriteria(
+                        @Param("title") String title,
+                        @Param("titleType") String titleType,
+                        @Param("isAdult") Boolean isAdult,
+                        @Param("startYear") Integer startYear,
+                        @Param("endYear") Integer endYear,
+                        @Param("minRuntime") Integer minRuntime,
+                        @Param("maxRuntime") Integer maxRuntime,
+                        Pageable pageable);
 
-    /**
-     * 统计年份数量
-     */
-    @Query("SELECT t.startYear, COUNT(t) FROM TitleBasics t " +
-            "WHERE (:startYear IS NULL OR t.startYear >= :startYear) AND " +
-            "(:endYear IS NULL OR t.startYear <= :endYear) " +
-            "GROUP BY t.startYear")
-    List<Object[]> countByStartYear(
-            @Param("startYear") Integer startYear,
-            @Param("endYear") Integer endYear);
+        /**
+         * 统计类型数量
+         */
+        @Query("SELECT t.titleType, COUNT(t) FROM TitleBasics t GROUP BY t.titleType")
+        List<Object[]> countByTitleType();
 
-    boolean existsByTconst(String tconst);
+        /**
+         * 统计年份数量
+         */
+        @Query("SELECT t.startYear, COUNT(t) FROM TitleBasics t " +
+                        "WHERE (:startYear IS NULL OR t.startYear >= :startYear) AND " +
+                        "(:endYear IS NULL OR t.startYear <= :endYear) " +
+                        "GROUP BY t.startYear")
+        List<Object[]> countByStartYear(
+                        @Param("startYear") Integer startYear,
+                        @Param("endYear") Integer endYear);
+
+        /**
+         * PostgreSQL Full Text Search
+         * Uses to_tsvector and plainto_tsquery for high-performance natural language
+         * searching
+         * Orders results by relevance (rank)
+         */
+        @Query(value = "SELECT * FROM title_basics " +
+                        "WHERE to_tsvector('english', coalesce(primarytitle, '') || ' ' || coalesce(originaltitle, '')) @@ plainto_tsquery('english', :query) "
+                        +
+                        "ORDER BY ts_rank(to_tsvector('english', coalesce(primarytitle, '') || ' ' || coalesce(originaltitle, '')), plainto_tsquery('english', :query)) DESC", countQuery = "SELECT count(*) FROM title_basics "
+                                        +
+                                        "WHERE to_tsvector('english', coalesce(primarytitle, '') || ' ' || coalesce(originaltitle, '')) @@ plainto_tsquery('english', :query)", nativeQuery = true)
+        Page<TitleBasics> searchByFullText(@Param("query") String query, Pageable pageable);
+
+        boolean existsByTconst(String tconst);
 }

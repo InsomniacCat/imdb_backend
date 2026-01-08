@@ -2,16 +2,49 @@ spring:
   application:
     name: backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/imdb_db
+    url: jdbc:postgresql://localhost:5432/imdb_db?reWriteBatchedStatements=true
     username: admin
     password: 1204752
     driver-class-name: org.postgresql.Driver
+    # HikariCP 连接池配置（优化大并发查询）
+    hikari:
+      maximum-pool-size: 20  # 最大连接数
+      minimum-idle: 5  # 最小空闲连接数
+      connection-timeout: 30000  # 连接超时（30秒）
+      idle-timeout: 600000  # 空闲超时（10分钟）
+      max-lifetime: 1800000  # 连接最大生命周期（30分钟）
+      leak-detection-threshold: 60000  # 连接泄漏检测阈值（60秒）
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
+        jdbc:
+          batch_size: 50
+          order_inserts: true
+          order_updates: true
+          fetch_size: 50  # 每次从数据库取50条记录（优化大结果集）
+        # 查询优化
+        query:
+          in_clause_parameter_padding: true  # 优化 IN 查询
+        # 二级缓存（可选，根据实际情况开启）
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+    show-sql: false
+    # 性能优化：开启懒加载和延迟初始化
+    open-in-view: false  # 关闭 OSIV，防止 N+1 查询
+
+server:
+  # Tomcat 配置优化
+  tomcat:
+    threads:
+      max: 200  # 最大工作线程数
+      min-spare: 10  # 最小备用线程数
+    max-connections: 10000  # 最大连接数
+    accept-count: 100  # 等待队列长度
+    connection-timeout: 20000  # 连接超时（20秒）

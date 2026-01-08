@@ -53,40 +53,76 @@ public class TitleService {
     /**
      * 根据ID获取电影详情（包括评分、主要演职员信息和演员姓名）
      */
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    /**
+     * 根据ID获取电影详情（高效版：使用原生SQL Join）
+     */
     public TitleDetailDTO getTitleDetails(String id) {
-        Optional<TitleBasics> titleOpt = titleBasicsRepository.findById(id);
-        if (!titleOpt.isPresent()) {
+        // 1. 基础信息查询 (Basic Info)
+        String baseSql = "SELECT primarytitle, originaltitle, isadult, startyear, endyear, runtimeminutes, genres " +
+                "FROM title_basics WHERE tconst = ?";
+        List<Map<String, Object>> baseResult = jdbcTemplate.queryForList(baseSql, id);
+
+        if (baseResult.isEmpty()) {
             return null;
         }
 
-        TitleBasics title = titleOpt.get();
-        TitleRatings ratings = titleRatingsRepository.findById(id).orElse(null);
-        TitleCrew crew = titleCrewRepository.findById(id).orElse(null);
+        Map<String, Object> base = baseResult.get(0);
 
-        // 1. 获取所有主要演职人员 (Principals)
-        List<TitlePrincipals> principals = titlePrincipalsRepository.findByIdTconst(id);
+        // 2. 评分查询 (Ratings)
+        String ratingSql = "SELECT averagerating, numvotes FROM title_ratings WHERE tconst = ?";
+        List<Map<String, Object>> ratingResult = jdbcTemplate.queryForList(ratingSql, id);
+        Double avgRating = null;
+        Integer numVotes = null;
+        if (!ratingResult.isEmpty()) {
+            avgRating = (Double) ratingResult.get(0).get("averagerating");
+            numVotes = (Integer) ratingResult.get(0).get("numvotes");
+        }
 
-        // 2. 提取所有的 nconst
-        List<String> nconsts = principals.stream()
-                .map(TitlePrincipals::getNconst)
-                .collect(Collectors.toList());
+        // 3. 演职员表查询 (Principals + Names) - 核心优化点
+        String castSql = "SELECT p.nconst, n.primaryname, p.category, p.job, p.characters " +
+                "FROM title_principals p " +
+                "LEFT JOIN name_basics n ON p.nconst = n.nconst " +
+                "WHERE p.tconst = ? " +
+                "ORDER BY p.ordering";
 
-        // 3. 批量查询 Names
-        List<NameBasics> names = nameBasicsRepository.findAllById(nconsts);
-        Map<String, String> nameMap = names.stream()
-                .collect(Collectors.toMap(NameBasics::getNconst, NameBasics::getPrimaryName));
+        List<TitleDetailDTO.CastMemberDTO> castList = jdbcTemplate.query(castSql, (rs, rowNum) -> {
+            String characters = rs.getString("characters");
+            // 简单的JSON清洗，如果已经是jsonb则不需要，但为了兼容性保留
+            if (characters != null) {
+                characters = characters.replace("\\\"", "\"");
+            }
+            return new TitleDetailDTO.CastMemberDTO(
+                    rs.getString("nconst"),
+                    rs.getString("primaryname"),
+                    rs.getString("category"),
+                    rs.getString("job"),
+                    characters);
+        }, id);
 
-        // 4. 组装 CastMemberDTO
-        List<CastMemberDTO> castList = principals.stream()
-                .map(p -> new CastMemberDTO(
-                        p.getNconst(),
-                        nameMap.getOrDefault(p.getNconst(), "Unknown"),
-                        p.getCategory(),
-                        p.getJob(),
-                        p.getCharacters()))
-                .collect(Collectors.toList());
+        // 4. 组装最终 DTO
+        TitleDetailDTO dto = new TitleDetailDTO();
+        dto.setTconst(id);
+        dto.setPrimaryTitle((String) base.get("primarytitle"));
+        dto.setOriginalTitle((String) base.get("originaltitle"));
+        dto.setIsAdult((Boolean) base.get("isadult"));
+        dto.setStartYear((Integer) base.get("startyear"));
+        dto.setEndYear((Integer) base.get("endyear"));
+        dto.setRuntimeMinutes((Integer) base.get("runtimeminutes"));
 
-        return new TitleDetailDTO(title, ratings, crew, castList);
+        // Genres string to List
+        String genresStr = (String) base.get("genres");
+        if (genresStr != null) {
+            dto.setGenres(Arrays.asList(genresStr.split(",")));
+        }
+
+        dto.setAverageRating(avgRating);
+        dto.setNumVotes(numVotes);
+        dto.setCast(castList); // 完美对接
+
+        return dto;
     }
 
     /**
@@ -137,14 +173,35 @@ public class TitleService {
 
     /**
      * 搜索电影/剧集（按标题）
+     * 优化版本：使用分页限制 + 批量查询评分
      */
     public List<Map<String, Object>> searchByTitle(String query) {
-        // Cap results to avoid massive lists
-        List<TitleBasics> titles = titleBasicsRepository.findByPrimaryTitleContainingIgnoreCase(query);
-        if (titles.size() > 50) {
-            titles = titles.subList(0, 50);
+        // 使用分页限制，最多返回50条
+        Pageable limit = PageRequest.of(0, 50);
+
+        // 优化：优先使用全文检索 (Full Text Search)
+        // 如果查询词太短（例如1-2个字母），全文检索可能效果不佳或性能开销大，
+        // 但对于 "Star Wars" 这样的词，性能是数量级提升。
+        // 这里我们对所有查询都启用全文检索，因为我们创建了GIN索引。
+        Page<TitleBasics> page = titleBasicsRepository.searchByFullText(query, limit);
+        List<TitleBasics> titles = page.getContent();
+
+        // 如果全文检索没结果（有的词可能被当做停用词过滤了），可以由前端决定是否重试或提示
+        // 也可以在这里fallback到旧的LIKE查询，但LIKE查询在大数据量下有风险，暂时只用FTS。
+        if (titles.isEmpty() && query.length() > 3) {
+            // Fallback logic could be added here if really needed
         }
 
+        // 批量查询所有评分（避免N+1问题）
+        List<String> tconsts = titles.stream()
+                .map(TitleBasics::getTconst)
+                .collect(Collectors.toList());
+
+        List<TitleRatings> ratingsList = titleRatingsRepository.findAllById(tconsts);
+        Map<String, TitleRatings> ratingsMap = ratingsList.stream()
+                .collect(Collectors.toMap(TitleRatings::getTconst, r -> r));
+
+        // 组装结果
         List<Map<String, Object>> results = new ArrayList<>();
         for (TitleBasics title : titles) {
             Map<String, Object> titleMap = new HashMap<>();
@@ -154,11 +211,11 @@ public class TitleService {
             titleMap.put("startYear", title.getStartYear());
             titleMap.put("genres", title.getGenres());
 
-            // 查询评分（可选：为了搜索结果也显示分数）
-            Optional<TitleRatings> ratingsOpt = titleRatingsRepository.findById(title.getTconst());
-            if (ratingsOpt.isPresent()) {
-                titleMap.put("averageRating", ratingsOpt.get().getAverageRating());
-                titleMap.put("numVotes", ratingsOpt.get().getNumVotes());
+            // 从Map中获取评分（如果存在）
+            TitleRatings ratings = ratingsMap.get(title.getTconst());
+            if (ratings != null) {
+                titleMap.put("averageRating", ratings.getAverageRating());
+                titleMap.put("numVotes", ratings.getNumVotes());
             }
 
             results.add(titleMap);

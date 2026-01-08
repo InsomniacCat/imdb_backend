@@ -1,6 +1,7 @@
 package com.imdb.backend.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * 电影/剧集评分信息实体类
@@ -13,15 +14,21 @@ public class TitleRatings {
     @Column(name = "tconst", length = 20, nullable = false)
     private String tconst; // 与 TitleBasics 共享主键
 
-    // 修复PostgreSQL中浮点数类型的precision和scale问题
-    @Column(name = "average_rating")
+    @Column(name = "averageRating")
     private Double averageRating;
-    
-    @Column(name = "num_votes")
+
+    @Column(name = "numVotes")
     private Integer numVotes;
 
+    // 建立与TitleBasics的关联，但由tconst字段管理外键/主键值，确保导入服务可以直接插入ID
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tconst", insertable = false, updatable = false)
+    @JsonIgnore
+    private TitleBasics titleBasics;
+
     // 无参构造函数
-    public TitleRatings() {}
+    public TitleRatings() {
+    }
 
     // 全参构造函数
     public TitleRatings(String tconst, Double averageRating, Integer numVotes) {
@@ -55,12 +62,11 @@ public class TitleRatings {
         this.numVotes = numVotes;
     }
 
-    @Override
-    public String toString() {
-        return "TitleRatings{" +
-                "tconst='" + tconst + '\'' +
-                ", averageRating=" + averageRating +
-                ", numVotes=" + numVotes +
-                '}';
+    public TitleBasics getTitleBasics() {
+        return titleBasics;
+    }
+
+    public void setTitleBasics(TitleBasics titleBasics) {
+        this.titleBasics = titleBasics;
     }
 }

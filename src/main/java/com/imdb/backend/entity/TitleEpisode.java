@@ -13,17 +13,18 @@ public class TitleEpisode {
     @Column(name = "tconst", length = 20, nullable = false)
     private String tconst;
 
-    @Column(name = "parent_tconst", length = 20)
+    @Column(name = "parentTconst", length = 20)
     private String parentTconst;
 
-    @Column(name = "season_number")
+    @Column(name = "seasonNumber")
     private Integer seasonNumber;
-    
-    @Column(name = "episode_number")
+
+    @Column(name = "episodeNumber")
     private Integer episodeNumber;
 
     // 无参构造函数
-    public TitleEpisode() {}
+    public TitleEpisode() {
+    }
 
     // 全参构造函数
     public TitleEpisode(String tconst, String parentTconst, Integer seasonNumber, Integer episodeNumber) {

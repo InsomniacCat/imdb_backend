@@ -11,7 +11,7 @@ import jakarta.persistence.*;
 @IdClass(TitleAkasId.class) // 使用外部定义的复合主键类
 public class TitleAkas {
     @Id
-    @Column(name = "title_id", length = 20)
+    @Column(name = "titleId", length = 20)
     private String titleId;
 
     @Id
@@ -20,28 +20,29 @@ public class TitleAkas {
 
     @Column(name = "title", columnDefinition = "TEXT")
     private String title;
-    
+
     @Column(name = "region", length = 10)
     private String region;
-    
+
     @Column(name = "language", length = 10)
     private String language;
-    
+
     @Column(name = "types", columnDefinition = "TEXT")
     private String types;
-    
+
     @Column(name = "attributes", columnDefinition = "TEXT")
     private String attributes;
-    
-    @Column(name = "is_original_title")
+
+    @Column(name = "isOriginalTitle")
     private Boolean isOriginalTitle;
 
     // 无参构造函数
-    public TitleAkas() {}
+    public TitleAkas() {
+    }
 
     // 全参构造函数
-    public TitleAkas(String titleId, Integer ordering, String title, String region, 
-                     String language, String types, String attributes, Boolean isOriginalTitle) {
+    public TitleAkas(String titleId, Integer ordering, String title, String region,
+            String language, String types, String attributes, Boolean isOriginalTitle) {
         this.titleId = titleId;
         this.ordering = ordering;
         this.title = title;

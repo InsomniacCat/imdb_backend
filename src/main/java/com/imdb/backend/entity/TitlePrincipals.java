@@ -1,11 +1,9 @@
 package com.imdb.backend.entity;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -20,9 +18,23 @@ public class TitlePrincipals implements Serializable {
     @EmbeddedId
     private TitlePrincipalsId id = new TitlePrincipalsId();
 
+    // 建立与TitleBasics的关联
+    // 使用 @MapsId("tconst") 可能会导致问题，因为这是复合主键的一部分
+    // 所以这里使用 @JoinColumn 并设置 insertable=false, updatable=false，让 id.tconst 负责实际的值
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tconst", insertable = false, updatable = false)
+    @JsonIgnore
+    private TitleBasics titleBasics;
+
     // 人员ID
     @Column(name = "nconst", length = 255, nullable = false)
     private String nconst;
+
+    // 建立与 NameBasics 的关联 (Optional, for easy navigation)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nconst", insertable = false, updatable = false)
+    @JsonIgnore
+    private NameBasics nameBasics;
 
     // 类别（如actor, actress, director等）
     @Column(name = "category", length = 255)
@@ -89,5 +101,21 @@ public class TitlePrincipals implements Serializable {
 
     public void setCharacters(List<String> characters) {
         this.characters = characters;
+    }
+
+    public TitleBasics getTitleBasics() {
+        return titleBasics;
+    }
+
+    public void setTitleBasics(TitleBasics titleBasics) {
+        this.titleBasics = titleBasics;
+    }
+
+    public NameBasics getNameBasics() {
+        return nameBasics;
+    }
+
+    public void setNameBasics(NameBasics nameBasics) {
+        this.nameBasics = nameBasics;
     }
 }

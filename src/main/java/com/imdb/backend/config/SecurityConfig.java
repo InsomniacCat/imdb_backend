@@ -19,27 +19,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 使用自定义的CORS配置源，允许跨域请求
-                .csrf(csrf -> csrf.disable()) // 禁用CSRF保护（跨站请求伪造，Cross-Site Request Forgery）
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 设置无状态会话，适用于RESTful API
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll() // 允许所有/api路径的匿名访问
-                        .anyRequest().authenticated()); // 其他请求需要认证
+                        // 开放登录注册接口
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // 暂时开放所有GET请求供浏览，敏感操作可后续加锁
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().authenticated());
 
-        return http.build(); // 构建并返回配置
+        return http.build();
     }
 
-    // 配置CORS源，定义跨域请求策略，处理HTTP请求中的CORS相关逻辑
+    @Bean // 密码加密器
+    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*"); // 允许所有来源（使用pattern方式）
-        configuration.addAllowedMethod("*"); // 允许所有HTTP方法
-        configuration.addAllowedHeader("*"); // 允许所有请求头
-        configuration.setAllowCredentials(true); // 允许携带凭证
+        configuration.addAllowedOriginPattern("*");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration); // 对/api路径应用CORS配置
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }

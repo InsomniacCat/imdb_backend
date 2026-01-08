@@ -14,37 +14,44 @@ public class TitleBasics {
     @Column(name = "tconst", length = 20, nullable = false)
     private String tconst;
 
-    @Column(name = "title_type", length = 50)
+    @Column(name = "titleType", length = 50)
     private String titleType;
-    
-    @Column(name = "primary_title", columnDefinition = "TEXT")
+
+    @Column(name = "primaryTitle", columnDefinition = "TEXT")
     private String primaryTitle;
-    
-    @Column(name = "original_title", columnDefinition = "TEXT")
+
+    // original_title can be useful but for simplification, we keep it as just a
+    // column without heavy logic
+    @Column(name = "originalTitle", columnDefinition = "TEXT")
     private String originalTitle;
-    
-    @Column(name = "is_adult")
+
+    @Column(name = "isAdult")
     private Boolean isAdult;
-    
-    @Column(name = "start_year")
+
+    @Column(name = "startYear")
     private Integer startYear;
-    
-    @Column(name = "end_year")
+
+    @Column(name = "endYear")
     private Integer endYear;
-    
-    @Column(name = "runtime_minutes")
+
+    @Column(name = "runtimeMinutes")
     private Integer runtimeMinutes;
 
     @Convert(converter = StringListConverter.class)
     @Column(name = "genres", columnDefinition = "TEXT")
     private List<String> genres;
 
+    // 建立一对一关系，级联保存
+    @OneToOne(mappedBy = "titleBasics", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private TitleRatings ratings;
+
     // 无参构造函数
-    public TitleBasics() {}
+    public TitleBasics() {
+    }
 
     // 全参构造函数
-    public TitleBasics(String tconst, String titleType, String primaryTitle, String originalTitle, 
-                       Boolean isAdult, Integer startYear, Integer endYear, Integer runtimeMinutes, List<String> genres) {
+    public TitleBasics(String tconst, String titleType, String primaryTitle, String originalTitle,
+            Boolean isAdult, Integer startYear, Integer endYear, Integer runtimeMinutes, List<String> genres) {
         this.tconst = tconst;
         this.titleType = titleType;
         this.primaryTitle = primaryTitle;
@@ -129,18 +136,14 @@ public class TitleBasics {
         this.genres = genres;
     }
 
-    @Override
-    public String toString() {
-        return "TitleBasics{" +
-                "tconst='" + tconst + '\'' +
-                ", titleType='" + titleType + '\'' +
-                ", primaryTitle='" + primaryTitle + '\'' +
-                ", originalTitle='" + originalTitle + '\'' +
-                ", isAdult=" + isAdult +
-                ", startYear=" + startYear +
-                ", endYear=" + endYear +
-                ", runtimeMinutes=" + runtimeMinutes +
-                ", genres=" + genres +
-                '}';
+    public TitleRatings getRatings() {
+        return ratings;
+    }
+
+    public void setRatings(TitleRatings ratings) {
+        this.ratings = ratings;
+        if (ratings != null) {
+            ratings.setTitleBasics(this);
+        }
     }
 }
